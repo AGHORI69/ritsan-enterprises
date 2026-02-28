@@ -1,15 +1,20 @@
 require("dotenv").config();
 const express = require("express");
-const nodemailer = require("nodemailer");
 const cors = require("cors");
 const path = require("path");
+const sgMail = require("@sendgrid/mail");
 
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
+// Set SendGrid API Key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+// Email Route
 app.post("/send-email", async (req, res) => {
   const { name, email, message } = req.body;
 
@@ -17,51 +22,33 @@ app.post("/send-email", async (req, res) => {
     return res.status(400).json({ message: "All fields required" });
   }
 
+  const msg = {
+    to: "ritsan.enterprises1711@gmail.com", // your receiving email
+    from: "ritsan.enterprises1711@gmail.com", // MUST be verified in SendGrid
+    subject: `New Business Inquiry from ${name}`,
+    html: `
+      <div style="font-family:Arial;padding:20px;">
+        <h2>New Client Inquiry</h2>
+        <hr/>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message}</p>
+        <hr/>
+        <small>This email was sent from Ritsan Enterprises Website</small>
+      </div>
+    `,
+  };
+
   try {
-    const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.PASSWORD,
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-});
-
-    await transporter.sendMail({
-      from: `"Ritsan Website Inquiry" <${process.env.EMAIL}>`,
-      to: process.env.EMAIL,
-      subject: `New Business Inquiry from ${name}`,
-      html: `
-        <div style="font-family:Arial;padding:20px;background:#f4f4f4">
-          <div style="max-width:600px;margin:auto;background:white;padding:30px;border-radius:10px">
-            <h2 style="color:#7c3aed">New Client Inquiry</h2>
-            <hr/>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Message:</strong></p>
-            <p style="background:#f9f9f9;padding:15px;border-radius:5px">
-            ${message}
-            </p>
-            <hr/>
-            <p style="font-size:12px;color:gray">
-            This message was sent from Ritsan Enterprises official website.
-            </p>
-          </div>
-        </div>
-      `
-    });
-
+    await sgMail.send(msg);
     res.status(200).json({ message: "Email sent successfully" });
-
   } catch (error) {
-    console.error("EMAIL ERROR:", error);
+    console.error("SENDGRID ERROR:", error.response?.body || error);
     res.status(500).json({ message: "Email failed to send" });
   }
 });
 
+// Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
