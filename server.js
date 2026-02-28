@@ -1,6 +1,4 @@
 require("dotenv").config();
-console.log("EMAIL:", process.env.EMAIL);
-console.log("PASSWORD:", process.env.PASSWORD);
 const express = require("express");
 const nodemailer = require("nodemailer");
 const cors = require("cors");
