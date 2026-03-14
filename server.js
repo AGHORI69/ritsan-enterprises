@@ -49,6 +49,60 @@ app.post("/send-email", async (req, res) => {
   }
 });
 
+// PREBOOK ROUTE
+
+app.post("/prebook", async (req, res) => {
+
+const { business, owner, email, phone, requirements } = req.body;
+
+if(!business || !owner || !email || !phone){
+return res.status(400).json({ message: "All fields required" });
+}
+
+const msg = {
+
+to: "ritsan.enterprises1711@gmail.com",
+
+from: "ritsan.enterprises1711@gmail.com",
+
+subject: "New Smart Billing Pre-Booking",
+
+html: `
+
+<h2>New Smart Billing Pre-Booking</h2>
+
+<p><strong>Business Name:</strong> ${business}</p>
+
+<p><strong>Owner Name:</strong> ${owner}</p>
+
+<p><strong>Email:</strong> ${email}</p>
+
+<p><strong>Phone:</strong> ${phone}</p>
+
+<p><strong>Requirements:</strong></p>
+
+<p>${requirements}</p>
+
+`
+
+};
+
+try{
+
+await sgMail.send(msg);
+
+res.json({ message: "Pre-booking successful! We will contact you soon." });
+
+}catch(error){
+
+console.error("PREBOOK ERROR:", error);
+
+res.status(500).json({ message: "Pre-booking failed" });
+
+}
+
+});
+
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
